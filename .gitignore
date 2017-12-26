@@ -1,6 +1,9 @@
 
 # Created by https://www.gitignore.io/api/java,python,pycharm
 
+### data ###
+/data
+
 ### Java ###
 # Compiled class file
 *.class
