@@ -56,7 +56,7 @@
             </div>
         </div>
         <div class="form-group">
-            <button type="button" class="btn btn-primary" onclick="sendQuery()">搜索</button>
+            <button type="button" class="btn btn-primary" onclick="sendQuerySearchButton()">搜索</button>
         </div>
     </form>
 </div>
@@ -73,6 +73,17 @@
     <!--</div>-->
 
 </div>
+<div class="container">
+    <div class="row justify-content-center" id="pages">
+        <!--<ul class="pagination">-->
+        <!--<li class="page-item"><a class="page-link" href="#">Previous</a></li>-->
+        <!--<li class="page-item"><a class="page-link" href="#">1</a></li>-->
+        <!--<li class="page-item active"><a class="page-link" href="#">2</a></li>-->
+        <!--<li class="page-item"><a class="page-link" href="#">3</a></li>-->
+        <!--<li class="page-item"><a class="page-link" href="#">Next</a></li>-->
+        <!--</ul>-->
+    </div>
+</div>
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
         integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
         crossorigin="anonymous"></script>
@@ -85,6 +96,7 @@
 <script>
     document.getElementById("sortrank").value = "desc";
     var PN = 10;
+    var MAXPGN = 10;
 
     function judgeRank() {
         var x = document.getElementById("sortfield").value;
@@ -124,7 +136,7 @@
         return reqstr;
     }
 
-    function sendQuery() {
+    function sendQuery(startpn) {
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
@@ -135,12 +147,15 @@
                 var numfound = response.numFound;
                 var start = response.start;
                 var docs = response.docs;
+
+                // add doc cords
                 for (var i = 0; i < docs.length; i++) {
                     var title_cn = "";
                     var author_cn = "";
                     var src = "";
                     var keyw_cn = "";
                     var abs_cn = "";
+                    var year = "";
                     if (docs[i].hasOwnProperty("title_cn")) {
                         title_cn = docs[i].title_cn;
                     }
@@ -156,13 +171,16 @@
                     if (docs[i].hasOwnProperty("abs_cn")) {
                         abs_cn = docs[i].abs_cn;
                     }
+                    if (docs[i].hasOwnProperty("year")) {
+                        year = docs[i].year.toString();
+                    }
                     var cardhtml = [
                         "<div class=\"row-12\" id=\"search_results\">",
                         "<div class=\"card\">",
                         "<div class=\"card-body\">",
                         "<h4 class=\"card-title\">" + title_cn + "</h4>",
                         "<p class=\"card-text\">" + author_cn + "</p>",
-                        "<p class=\"card-text\">" + src + "</p>",
+                        "<p class=\"card-text\">" + src + "  " + year + "</p>",
                         "<p class=\"card-text\">" + keyw_cn + "</p>",
                         "<p class=\"card-text\">" + abs_cn + "</p>",
                         "</div>",
@@ -171,12 +189,52 @@
                     ].join("\n");
                     search_results.innerHTML += cardhtml;
                 }
+
+                // add pagination
+                var pages = document.getElementById("pages");
+                if (numfound > 0) {
+                    var currPage = Math.floor(startpn / PN) + 1;
+                    var totalPage = Math.ceil(numfound / PN);
+                    var defaultdist = Math.floor((MAXPGN - 1) / 2);
+                    var lefttemp = currPage - defaultdist;
+                    var righttemp = currPage + MAXPGN - 1 - defaultdist;
+                    var leftmost = lefttemp;
+                    var rightmost = righttemp;
+                    if (lefttemp < 1) {
+                        leftmost = 1;
+                        rightmost = Math.min(totalPage, leftmost + MAXPGN - 1);
+                    } else if (righttemp > totalPage) {
+                        rightmost = totalPage;
+                        leftmost = Math.max(1, totalPage - MAXPGN + 1);
+                    }
+                    ulhtml = "<ul class=\"pagination\">\n";
+                    ulhtml += "<li class=\"page-item\"><a class=\"page-link\" href=\"#\" onclick=\"sendQuery(" + (PN * (Math.max(1, currPage - 1) - 1)).toString() + ")\">Previous</a></li>\n";
+                    for (var i = leftmost; i <= rightmost; i++) {
+                        if (i == currPage) {
+                            ulhtml += "<li class=\"page-item active\"><a class=\"page-link\" href=\"#\" "
+                        } else {
+                            ulhtml += "<li class=\"page-item\"><a class=\"page-link\" href=\"#\" "
+                        }
+                        ulhtml += "onclick=\"sendQuery(" + (PN * (i - 1)).toString() + ")\">" + i.toString() + "</a></li>\n";
+                    }
+                    ulhtml += "<li class=\"page-item\"><a class=\"page-link\" href=\"#\" onclick=\"sendQuery(" + (PN * (Math.min(totalPage, currPage + 1) - 1)).toString() + ")\">Next</a></li>\n";
+                    ulhtml += "</ul>\n";
+                    pages.innerHTML = ulhtml;
+                } else {
+                    pages.innerHTML = "";
+                }
             }
         };
-        var reqstr = getQueryStr(0);
+        var reqstr = getQueryStr(startpn);
         xhttp.open("GET", reqstr, true);
         xhttp.send();
     }
+
+    function sendQuerySearchButton() {
+        sendQuery(0);
+    }
+
+
 </script>
 </body>
 </html>
