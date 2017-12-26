@@ -116,6 +116,21 @@
     <field name="_root_" type="string" indexed="true" stored="false" docValues="false" />
     <field name="_text_" type="text_general" indexed="true" stored="false" multiValued="true"/>
 
+    <field name="title_cn" type="text_cn" indexed="true" stored="true"/>
+    <field name="title_en" type="text_en" indexed="true" stored="true"/>
+    <field name="author_cn" type="text_cn" indexed="true" stored="true" multiValued="true"/>
+    <field name="author_en" type="text_en" indexed="true" stored="true" multiValued="true"/>
+    <field name="first_auth" type="text_cn" indexed="true" stored="true" multiValued="true"/>
+    <field name="inst" type="text_cn" indexed="true" stored="true" multiValued="true"/>
+    <field name="src" type="text_cn" indexed="true" stored="true"/>
+    <field name="keyw_cn" type="text_cn" indexed="true" stored="true" multiValued="true"/>
+    <field name="keyw_en" type="text_en" indexed="true" stored="true" multiValued="true"/>
+    <field name="abs_cn" type="text_cn" indexed="true" stored="true"/>
+    <field name="abs_en" type="text_en" indexed="true" stored="true"/>
+    <field name="year" type="pint" indexed="true" stored="true" docValues="true"/>
+    <field name="volumn" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="src_en" type="text_en" indexed="true" stored="true"/>
+
     <!-- This can be enabled, in case the client does not know what fields may be searched. It isn't enabled by default
          because it's very expensive to index everything twice. -->
     <!-- <copyField source="*" dest="_text_"/> -->
@@ -936,15 +951,15 @@
        <str name="paramkey">param value</str>
      </similarity>
     -->
-	<fieldType name="text_smartcn" class="solr.TextField" positionIncrementGap="0">
+	<fieldType name="text_cn" class="solr.TextField" positionIncrementGap="0">
     <analyzer>
-  <tokenizer class="solr.HMMChineseTokenizerFactory"/>
-  <filter class="solr.CJKWidthFilterFactory"/>
-  <filter class="solr.StopFilterFactory"
-          words="org/apache/lucene/analysis/cn/smart/stopwords.txt"/>
-  <filter class="solr.PorterStemFilterFactory"/>
-  <filter class="solr.LowerCaseFilterFactory"/>
-</analyzer>
+        <tokenizer class="solr.HMMChineseTokenizerFactory"/>
+            <filter class="solr.CJKWidthFilterFactory"/>
+            <filter class="solr.StopFilterFactory"
+                words="org/apache/lucene/analysis/cn/smart/stopwords.txt"/>
+            <filter class="solr.PorterStemFilterFactory"/>
+            <filter class="solr.LowerCaseFilterFactory"/>
+    </analyzer>
     </fieldType>
 
 </schema>

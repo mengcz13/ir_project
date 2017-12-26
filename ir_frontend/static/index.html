@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>信息检索大作业--知网数据搜索</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
+          integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+</head>
+<body>
+<div class="container">
+    <form>
+        <div class="form-group">
+            <label for="qtitle">标题</label>
+            <input type="text" class="form-control" id="qtitle">
+        </div>
+        <div class="form-group">
+            <label for="qabs">摘要</label>
+            <input type="text" class="form-control" id="qabs">
+        </div>
+        <div class="form-group">
+            <label for="qauthor">作者</label>
+            <input type="text" class="form-control" id="qauthor">
+        </div>
+        <div class="form-group">
+            <label for="qsrc">出版单位</label>
+            <input type="text" class="form-control" id="qsrc">
+        </div>
+        <div class="form-group">
+            <label for="year">出版年份</label>
+            <div class="form-row" id="year">
+                <div class="col">
+                    <input type="number" class="form-control" id="startyear" min="1900" max="2017" placeholder="起始年份">
+                </div>
+                <div class="col">
+                    <input type="number" class="form-control" id="endyear" min="1900" max="2017" placeholder="终止年份">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="sort">排序方式</label>
+            <div class="form-row" id="sort">
+                <div class="col">
+                    <select class="form-control" id="sortfield" onchange="judgeRank()">
+                        <option value="score" selected>按相关度排序</option>
+                        <option value="year">按时间排序</option>
+                        <option value="src">按出版单位排序</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <select class="form-control" id="sortrank">
+                        <option value="asc">升序</option>
+                        <option value="desc">降序</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <button type="button" class="btn btn-primary" onclick="sendQuery()">搜索</button>
+        </div>
+    </form>
+</div>
+<div class="container" id="search_results">
+
+    <!--template for paper!-->
+    <!--<div class="card">-->
+    <!--<div class="card-body">-->
+    <!--<h4 class="card-title">基坑开挖对预应力管桩的影响</h4>-->
+    <!--<p class="card-text">余旭, 张宇</p>-->
+    <!--<p class="card-text">安徽建筑工业学院学报(自然科学版)</p>-->
+    <!--<p class="card-text">由于预应力管桩优点众多,已在国内外被广泛使用,但同时与预应力管桩相关的工程问题也引起了人们的重视。比如在基坑开挖时,预应力管桩将受到单侧土体开挖后产生的水平侧向力作用,从而导致桩身产生附加应力、弯矩和水平偏位。本文利用有限元分析软件ANSYS模拟开挖过程,计算桩体的位移和应力,再将前期已整理完毕的实际工程数据加以对比。在验证ANSYS分析的可行性后,对土体的各项物理参数分别进行模拟分析,以确定每项参数对预应力管桩偏位的影响程度。分析过程中不但模拟了土层的初始应力,而且使用了生死单元模拟基坑开挖的动态过程,更贴合实际。</p>-->
+    <!--</div>-->
+    <!--</div>-->
+
+</div>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"
+        integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"
+        integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ"
+        crossorigin="anonymous"></script>
+<script>
+    document.getElementById("sortrank").value = "desc";
+    var PN = 10;
+
+    function judgeRank() {
+        var x = document.getElementById("sortfield").value;
+        var rank = document.getElementById("sortrank");
+        if (x == "score") {
+            rank.value = "desc";
+        } else {
+            rank.value = "asc";
+        }
+    }
+
+    function getQueryStr(startpn) {
+        var reqstr = "select?df=title_cn&q=";
+        var title_cn = document.getElementById("qtitle").value;
+        var abs_cn = document.getElementById("qabs").value;
+        var author = document.getElementById("qauthor").value;
+        var src = document.getElementById("qsrc").value;
+        var startyear = document.getElementById("startyear").value;
+        var endyear = document.getElementById("endyear").value;
+
+        reqstr += title_cn;
+        if (abs_cn != "") {
+            reqstr = reqstr + " AND " + "abs_cn:" + abs_cn;
+        }
+        if (author != "") {
+            reqstr = reqstr + " AND " + "author_cn:" + author;
+        }
+        if (src != "") {
+            reqstr = reqstr + " AND " + "src:" + src;
+        }
+        if (startyear != "" && endyear != "") {
+            reqstr = reqstr + " AND " + "year:[" + startyear + " TO " + endyear + "]";
+        }
+        reqstr = reqstr + "&rows=" + PN.toString();
+        reqstr = reqstr + "&sort=" + document.getElementById("sortfield").value + " " + document.getElementById("sortrank").value;
+        reqstr = reqstr + "&start=" + startpn.toString();
+        return reqstr;
+    }
+
+    function sendQuery() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var search_results = document.getElementById("search_results");
+                search_results.innerHTML = "";
+                var resall = JSON.parse(this.responseText);
+                var response = resall.response;
+                var numfound = response.numFound;
+                var start = response.start;
+                var docs = response.docs;
+                for (var i = 0; i < docs.length; i++) {
+                    var title_cn = "";
+                    var author_cn = "";
+                    var src = "";
+                    var keyw_cn = "";
+                    var abs_cn = "";
+                    if (docs[i].hasOwnProperty("title_cn")) {
+                        title_cn = docs[i].title_cn;
+                    }
+                    if (docs[i].hasOwnProperty("author_cn")) {
+                        author_cn = docs[i].author_cn.join(",");
+                    }
+                    if (docs[i].hasOwnProperty("src")) {
+                        src = docs[i].src;
+                    }
+                    if (docs[i].hasOwnProperty("keyw_cn")) {
+                        keyw_cn = docs[i].keyw_cn.join(",");
+                    }
+                    if (docs[i].hasOwnProperty("abs_cn")) {
+                        abs_cn = docs[i].abs_cn;
+                    }
+                    var cardhtml = [
+                        "<div class=\"row-12\" id=\"search_results\">",
+                        "<div class=\"card\">",
+                        "<div class=\"card-body\">",
+                        "<h4 class=\"card-title\">" + title_cn + "</h4>",
+                        "<p class=\"card-text\">" + author_cn + "</p>",
+                        "<p class=\"card-text\">" + src + "</p>",
+                        "<p class=\"card-text\">" + keyw_cn + "</p>",
+                        "<p class=\"card-text\">" + abs_cn + "</p>",
+                        "</div>",
+                        "</div>",
+                        "</div>"
+                    ].join("\n");
+                    search_results.innerHTML += cardhtml;
+                }
+            }
+        };
+        var reqstr = getQueryStr(0);
+        xhttp.open("GET", reqstr, true);
+        xhttp.send();
+    }
+</script>
+</body>
+</html>
