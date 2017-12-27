@@ -43,14 +43,33 @@
                 <div class="col">
                     <select class="form-control" id="sortfield" onchange="judgeRank()">
                         <option value="score" selected>按相关度排序</option>
-                        <option value="year">按时间排序</option>
+                        <option value="date">按时间排序</option>
                         <option value="src">按出版单位排序</option>
+                        <option value="firth_auth">按第一作者排序</option>
                     </select>
                 </div>
                 <div class="col">
                     <select class="form-control" id="sortrank">
                         <option value="asc">升序</option>
                         <option value="desc">降序</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="form-row">
+                <div class="col">
+                    <label for="analyzer">分词方式</label>
+                    <select class="form-control" id="analyzer">
+                        <option value="hmm" selected>HMM Chinese</option>
+                        <option value="bigram">CJK Bigram</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="word2vecflag">Word2Vec</label>
+                    <select class="form-control" id="word2vecflag">
+                        <option value="true">启用</option>
+                        <option value="false" selected>禁用</option>
                     </select>
                 </div>
             </div>
@@ -109,7 +128,7 @@
     }
 
     function getQueryStr(startpn) {
-        var reqstr = "select?df=title_cn&q=";
+        var reqstr = "select?";
         var title_cn = document.getElementById("qtitle").value;
         var abs_cn = document.getElementById("qabs").value;
         var author = document.getElementById("qauthor").value;
@@ -117,7 +136,15 @@
         var startyear = document.getElementById("startyear").value;
         var endyear = document.getElementById("endyear").value;
 
-        reqstr += title_cn;
+        var analyzer = document.getElementById("analyzer").value;
+        var word2vecflag = document.getElementById("word2vecflag").value;
+
+        reqstr = reqstr + "analyzer=" + analyzer;
+        reqstr = reqstr + "&word2vecflag=" + word2vecflag;
+
+        reqstr += "&df=title_cn";
+
+        reqstr = reqstr + "&q=" + title_cn;
         if (abs_cn != "") {
             reqstr = reqstr + " AND " + "abs_cn:" + abs_cn;
         }
@@ -128,7 +155,11 @@
             reqstr = reqstr + " AND " + "src:" + src;
         }
         if (startyear != "" && endyear != "") {
-            reqstr = reqstr + " AND " + "year:[" + startyear + " TO " + endyear + "]";
+            reqstr = reqstr + " AND " + "date:[" + startyear + "-01-01T00\:00\:00Z" + " TO " + endyear + "-12-31T23\:59\:59Z" + "]";
+        } else if (startyear == "" && endyear != "") {
+            reqstr = reqstr + " AND " + "date:[" + "*" + " TO " + endyear + "-12-31T23\:59\:59Z" + "]";
+        } else if (endyear == "" && startyear != "") {
+            reqstr = reqstr + " AND " + "date:[" + startyear + "-01-01T00\:00\:00Z" + " TO " + "*" + "]";
         }
         reqstr = reqstr + "&rows=" + PN.toString();
         reqstr = reqstr + "&sort=" + document.getElementById("sortfield").value + " " + document.getElementById("sortrank").value;
@@ -155,7 +186,7 @@
                     var src = "";
                     var keyw_cn = "";
                     var abs_cn = "";
-                    var year = "";
+                    var date = "";
                     if (docs[i].hasOwnProperty("title_cn")) {
                         title_cn = docs[i].title_cn;
                     }
@@ -171,8 +202,8 @@
                     if (docs[i].hasOwnProperty("abs_cn")) {
                         abs_cn = docs[i].abs_cn;
                     }
-                    if (docs[i].hasOwnProperty("year")) {
-                        year = docs[i].year.toString();
+                    if (docs[i].hasOwnProperty("date")) {
+                        date = new Date(docs[i].date).toDateString();
                     }
                     var cardhtml = [
                         "<div class=\"row-12\" id=\"search_results\">",
@@ -180,7 +211,7 @@
                         "<div class=\"card-body\">",
                         "<h4 class=\"card-title\">" + title_cn + "</h4>",
                         "<p class=\"card-text\">" + author_cn + "</p>",
-                        "<p class=\"card-text\">" + src + "  " + year + "</p>",
+                        "<p class=\"card-text\">" + src + "\t" + date + "</p>",
                         "<p class=\"card-text\">" + keyw_cn + "</p>",
                         "<p class=\"card-text\">" + abs_cn + "</p>",
                         "</div>",

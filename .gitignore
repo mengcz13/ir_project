@@ -3,6 +3,7 @@
 
 ### data ###
 /data
+/solr-7.2.0
 
 ### Java ###
 # Compiled class file
